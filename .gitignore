@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.js.map
+prisma/auth-service/migrations/
+prisma/schedule-service/migrations/
+docs/

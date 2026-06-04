@@ -1,0 +1,49 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../../node_modules/@prisma/schedule-client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL_SCHEDULE")
+}
+  
+model Customer {
+    id        String     @id @default(uuid())
+    name      String
+    email     String
+    phone     String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    schedules Schedule[] 
+
+    @@map("customers")
+}
+
+model Doctor {
+    id             String     @id @default(uuid())
+    name           String
+    specialization String
+    createdAt      DateTime   @default(now())
+    updatedAt      DateTime   @updatedAt
+    schedules      Schedule[]
+
+    @@map("doctors")
+}
+
+model Schedule {
+    id         String   @id @default(uuid())
+    startTime  DateTime
+    endTime    DateTime
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    customerId String
+    customer   Customer @relation(fields: [customerId], references: [id])
+
+    doctorId   String
+    doctor     Doctor   @relation(fields: [doctorId], references: [id])
+
+    @@map("schedules")
+}
+

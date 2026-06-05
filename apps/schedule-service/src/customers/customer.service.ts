@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateCustomerInput } from "./dto/create-customer.input";
 import { UpdateCustomerInput } from "./dto/update-customer.input";
@@ -20,6 +24,14 @@ export class CustomerService {
   }
 
   async create(input: CreateCustomerInput) {
+    const existing = await this.prisma.customer.findFirst({
+      where: { email: input.email },
+    });
+    if (existing) {
+      throw new ConflictException(
+        `Customer with email ${input.email} already exists`,
+      );
+    }
     return this.prisma.customer.create({ data: input });
   }
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateDoctorInput } from "./dto/create-doctor.input";
 import { UpdateDoctorInput } from "./dto/update-doctor.input";
@@ -20,6 +24,14 @@ export class DoctorService {
   }
 
   async create(input: CreateDoctorInput) {
+    const existing = await this.prismaService.doctor.findFirst({
+      where: { name: input.name, specialization: input.specialization },
+    });
+    if (existing) {
+      throw new ConflictException(
+        `Doctor with name ${input.name} and specialization ${input.specialization} already exists`,
+      );
+    }
     return this.prismaService.doctor.create({
       data: input,
     });

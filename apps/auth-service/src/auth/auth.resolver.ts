@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
 import { AuthService } from "./auth.service";
-import { AuthResponse } from "./dto/auth-response";
+import { AuthResponse } from "./dto/auth-response.type";
 import { RegisterInput } from "./dto/register.input";
 import { LoginInput } from "./dto/login.input";
 

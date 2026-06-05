@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ScheduleService } from "./schedule.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationService } from "../notification/notification.service";
 import { NotFoundException, BadRequestException } from "@nestjs/common";
 
 const mockPrisma = {
@@ -35,6 +36,11 @@ const mockSchedule = {
   updatedAt: new Date(),
 };
 
+const mockNotificationService = {
+  notifyScheduleCreated: jest.fn(),
+  notifyScheduleDeleted: jest.fn(),
+};
+
 describe("ScheduleService", () => {
   let service: ScheduleService;
 
@@ -43,11 +49,14 @@ describe("ScheduleService", () => {
       providers: [
         ScheduleService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compile();
 
     service = module.get<ScheduleService>(ScheduleService);
     jest.clearAllMocks();
+    mockNotificationService.notifyScheduleCreated.mockResolvedValue(undefined);
+    mockNotificationService.notifyScheduleDeleted.mockResolvedValue(undefined);
   });
 
   describe("findAll", () => {

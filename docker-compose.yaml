@@ -32,11 +32,23 @@ services:
       AUTH_TCP_PORT: 3003
     ports:
       - "3001:3001"
+      - "3003:3003"
     depends_on:
       postgres:
         condition: service_healthy
     command: >
       sh -c "npx prisma migrate deploy --schema=prisma/auth-service/schema.prisma && node dist/apps/auth-service/main"
+
+  redis:
+    image: redis:7-alpine
+    container_name: healthcare-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   schedule-service:
     build:
@@ -48,6 +60,13 @@ services:
       AUTH_SERVICE_HOST: auth-service
       AUTH_TCP_PORT: 3003
       SCHEDULE_HTTP_PORT: 3002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_HOST: sandbox.smtp.mailtrap.io
+      MAIL_PORT: 2525
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: noreply@healthcare.com
     ports:
       - "3002:3002"
     depends_on:
@@ -55,6 +74,8 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_started
+      redis:
+        condition: service_healthy
     command: >
       sh -c "npx prisma migrate deploy --schema=prisma/schedule-service/schema.prisma && node dist/apps/schedule-service/main"
 

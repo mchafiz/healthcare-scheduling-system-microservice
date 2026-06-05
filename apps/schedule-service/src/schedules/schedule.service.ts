@@ -6,10 +6,14 @@ import {
 
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateScheduleInput } from "./dto/create-schedule.input";
+import { NotificationService } from "../notification/notification.service";
 
 @Injectable()
 export class ScheduleService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async findAll(skip = 0, take = 10, filter?: { doctorId?: string; customerId?: string; scheduledAt?: Date }) {
     const where: any = {};
@@ -69,7 +73,7 @@ export class ScheduleService {
       );
     }
 
-    return this.prismaService.schedule.create({
+    const schedule = await this.prismaService.schedule.create({
       data: {
         objective: input.objective,
         customerId: input.customerId,
@@ -78,10 +82,28 @@ export class ScheduleService {
       },
       include: { customer: true, doctor: true },
     });
+
+    await this.notificationService.notifyScheduleCreated({
+      customerEmail: schedule.customer.email,
+      customerName: schedule.customer.name,
+      doctorName: schedule.doctor.name,
+      objective: schedule.objective,
+      scheduledAt: schedule.scheduledAt,
+    });
+
+    return schedule;
   }
 
   async delete(id: string) {
-    await this.findOne(id);
+    const schedule = await this.findOne(id);
+
+    await this.notificationService.notifyScheduleDeleted({
+      customerEmail: schedule.customer.email,
+      customerName: schedule.customer.name,
+      doctorName: schedule.doctor.name,
+      scheduledAt: schedule.scheduledAt,
+    });
+
     await this.prismaService.schedule.delete({ where: { id } });
     return true;
   }

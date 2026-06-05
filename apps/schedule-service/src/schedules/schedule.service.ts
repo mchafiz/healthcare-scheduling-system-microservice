@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateScheduleInput } from "./dto/create-schedule.input";
 
@@ -10,13 +11,23 @@ import { CreateScheduleInput } from "./dto/create-schedule.input";
 export class ScheduleService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findAll() {
-    return this.prismaService.schedule.findMany({
-      include: {
-        doctor: true,
-        customer: true,
-      },
-    });
+  async findAll(skip = 0, take = 10, filter?: { doctorId?: string; customerId?: string; scheduledAt?: Date }) {
+    const where: any = {};
+    if (filter?.doctorId) where.doctorId = filter.doctorId;
+    if (filter?.customerId) where.customerId = filter.customerId;
+    if (filter?.scheduledAt) where.scheduledAt = filter.scheduledAt;
+
+    const [data, total] = await Promise.all([
+      this.prismaService.schedule.findMany({
+        where,
+        skip,
+        take,
+        include: { doctor: true, customer: true },
+        orderBy: { scheduledAt: 'asc' },
+      }),
+      this.prismaService.schedule.count({ where }),
+    ]);
+    return { data, total };
   }
 
   async findOne(id: string) {
@@ -45,32 +56,25 @@ export class ScheduleService {
     if (!doctor)
       throw new NotFoundException(`Doctor ${input.doctorId} not found`);
 
-    if (input.endTime <= input.startTime) {
-      throw new BadRequestException("endTime must be after startTime");
-    }
-
     const conflict = await this.prismaService.schedule.findFirst({
       where: {
         doctorId: input.doctorId,
-        AND: [
-          { startTime: { lt: input.endTime } },
-          { endTime: { gt: input.startTime } },
-        ],
+        scheduledAt: input.scheduledAt,
       },
     });
 
     if (conflict) {
       throw new BadRequestException(
-        `Doctor already has a schedule from ${conflict.startTime} to ${conflict.endTime}`,
+        `Doctor already has a schedule at ${conflict.scheduledAt}`,
       );
     }
 
     return this.prismaService.schedule.create({
       data: {
+        objective: input.objective,
         customerId: input.customerId,
         doctorId: input.doctorId,
-        startTime: input.startTime,
-        endTime: input.endTime,
+        scheduledAt: input.scheduledAt,
       },
       include: { customer: true, doctor: true },
     });

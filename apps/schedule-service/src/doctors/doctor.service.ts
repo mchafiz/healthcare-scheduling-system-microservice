@@ -11,8 +11,12 @@ import { UpdateDoctorInput } from "./dto/update-doctor.input";
 export class DoctorService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findAll() {
-    return this.prismaService.doctor.findMany();
+  async findAll(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      this.prismaService.doctor.findMany({ skip, take }),
+      this.prismaService.doctor.count(),
+    ]);
+    return { data, total };
   }
 
   async findOne(id: string) {

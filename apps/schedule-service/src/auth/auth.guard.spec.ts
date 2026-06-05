@@ -38,6 +38,15 @@ describe("AuthGuard", () => {
     );
   });
 
+  it("should throw UnauthorizedException when authorization header has no token", async () => {
+    const context = buildContext({ authorization: "Bearer " });
+    mockAuthClient.send.mockReturnValue(of({ valid: false, userId: null }));
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException("No token provided"),
+    );
+  });
+
   it("should throw UnauthorizedException when token is invalid", async () => {
     const context = buildContext({ authorization: "Bearer bad-token" });
     mockAuthClient.send.mockReturnValue(of({ valid: false, userId: null }));

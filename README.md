@@ -2,8 +2,8 @@
 
 Sistem penjadwalan layanan kesehatan berbasis microservice. Proyek ini dibangun untuk membuktikan konsep pemisahan tanggung jawab antar service, keamanan autentikasi berlapis, dan validasi aturan bisnis di level database.
 
-![Tests](https://img.shields.io/badge/tests-59%20passed-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-70.8%25-yellow)
+![Tests](https://img.shields.io/badge/tests-70%20passed-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-72%25-yellowgreen)
 ![Services](https://img.shields.io/badge/services-auth%20%7C%20schedule-blue)
 ![NestJS](https://img.shields.io/badge/NestJS-10-red)
 ![GraphQL](https://img.shields.io/badge/GraphQL-code--first-e10098)
@@ -144,12 +144,12 @@ Dengan memisahkan `auth_db` dan `schedule_db`, coupling di level database hilang
 
 ## Test Coverage
 
-Unit test mencakup seluruh layer business logic (service, resolver, controller, guard) dengan total **59 test** di **11 test suite**.
+Unit test mencakup seluruh layer business logic (service, resolver, controller, guard) dengan total **70 test** di **11 test suite**.
 
 ```
 Test Suites : 11 passed
-Tests       : 59 passed
-Coverage    : 70.8% statements
+Tests       : 70 passed
+Coverage    : 72% statements | 53.48% branches | 50.48% functions | 71.67% lines
 ```
 
 | Layer | File | Statements | Branches | Functions | Lines |
@@ -160,11 +160,11 @@ Coverage    : 70.8% statements
 | | `users.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | **Schedule Service** | `customer.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | | `doctor.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| | `schedule.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| | `auth.guard.ts` | ![95%](https://img.shields.io/badge/95%25-brightgreen) | ![67%](https://img.shields.io/badge/67%25-yellow) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![95%](https://img.shields.io/badge/95%25-brightgreen) |
-| | `customer.resolver.ts` | ![73%](https://img.shields.io/badge/73%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![47%](https://img.shields.io/badge/47%25-yellow) | ![71%](https://img.shields.io/badge/71%25-green) |
-| | `doctor.resolver.ts` | ![76%](https://img.shields.io/badge/76%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![45%](https://img.shields.io/badge/45%25-yellow) | ![74%](https://img.shields.io/badge/74%25-green) |
-| | `schedule.resolver.ts` | ![76%](https://img.shields.io/badge/76%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![50%](https://img.shields.io/badge/50%25-yellow) | ![74%](https://img.shields.io/badge/74%25-green) |
+| | `schedule.service.ts` | ![97%](https://img.shields.io/badge/97%25-brightgreen) | ![89%](https://img.shields.io/badge/89%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `auth.guard.ts` | ![95%](https://img.shields.io/badge/95%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![95%](https://img.shields.io/badge/95%25-brightgreen) |
+| | `customer.resolver.ts` | ![75%](https://img.shields.io/badge/75%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![47%](https://img.shields.io/badge/47%25-yellow) | ![73%](https://img.shields.io/badge/73%25-green) |
+| | `doctor.resolver.ts` | ![75%](https://img.shields.io/badge/75%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![47%](https://img.shields.io/badge/47%25-yellow) | ![76%](https://img.shields.io/badge/76%25-green) |
+| | `schedule.resolver.ts` | ![79%](https://img.shields.io/badge/79%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![50%](https://img.shields.io/badge/50%25-yellow) | ![77%](https://img.shields.io/badge/77%25-green) |
 
 > Coverage resolver tidak 100% karena decorator GraphQL (`@Query`, `@Mutation`, `@Field`) tidak dieksekusi saat unit test — ini normal dan expected. Semua business logic di service layer mencapai **100%**.
 
@@ -180,15 +180,35 @@ npm test -- --coverage
 
 ### Dengan Docker Compose
 
+Pastikan Docker atau Podman sudah terinstall, lalu jalankan dari root folder project:
+
 ```bash
 docker-compose up --build
 ```
 
-Setelah semua service jalan:
+Perintah ini akan otomatis:
+1. Build image untuk Auth Service dan Schedule Service
+2. Menjalankan container PostgreSQL dan membuat `auth_db` + `schedule_db`
+3. Menjalankan database migration
+4. Menjalankan kedua service
+
+Setelah semua container jalan:
 - Auth Service: `http://localhost:3001/graphql`
 - Schedule Service: `http://localhost:3002/graphql`
 
+Untuk menghentikan semua container:
+```bash
+docker-compose down
+```
+
+Untuk menghapus semua data (termasuk database):
+```bash
+docker-compose down -v
+```
+
 ### Secara Lokal
+
+Pastikan PostgreSQL sudah berjalan dan sudah membuat database `auth_db` dan `schedule_db`, lalu:
 
 ```bash
 npm install
@@ -202,6 +222,17 @@ npm run start:auth:dev
 
 # Terminal 2
 npm run start:schedule:dev
+```
+
+### Catatan Struktur Docker
+
+Project ini menggunakan NestJS Monorepo sehingga Dockerfile disimpan di folder `docker/` dan di-reference dari root context. Ini berbeda dari struktur per-service konvensional, tapi memungkinkan kedua Dockerfile mengakses shared `node_modules` dan `prisma/` folder tanpa duplikasi.
+
+```
+docker/
+├── auth-service.Dockerfile    ← build context dari root (.)
+├── schedule-service.Dockerfile
+└── init-db.sql                ← script inisialisasi dua database
 ```
 
 ---
@@ -277,37 +308,71 @@ mutation {
   createSchedule(input: {
     doctorId: "uuid-dokter"
     customerId: "uuid-customer"
-    startTime: "2026-06-10T09:00:00Z"
-    endTime: "2026-06-10T10:00:00Z"
+    objective: "Konsultasi rutin"
+    scheduledAt: "2026-06-10T09:00:00Z"
   }) {
     id
-    startTime
-    endTime
+    objective
+    scheduledAt
     doctor { name }
     customer { name }
   }
 }
 ```
 
-### 7. Lihat Semua Jadwal
+### 7. Lihat Semua Jadwal (dengan pagination & filter)
 
 ```graphql
 query {
-  schedules {
-    id
-    startTime
-    endTime
-    doctor { name specialization }
-    customer { name phone }
+  schedules(
+    pagination: { skip: 0, take: 10 }
+    filter: { doctorId: "uuid-dokter" }
+  ) {
+    data {
+      id
+      objective
+      scheduledAt
+      doctor { name specialization }
+      customer { name phone }
+    }
+    total
   }
 }
 ```
 
----
+### 8. Lihat Semua Dokter (dengan pagination)
+
+```graphql
+query {
+  doctors(pagination: { skip: 0, take: 10 }) {
+    total
+    data {
+      id
+      name
+      specialization
+    }
+  }
+}
+```
+
+### 9. Lihat Semua Customer (dengan pagination)
+
+```graphql
+query {
+  customers(pagination: { skip: 0, take: 10 }) {
+    total
+    data {
+      id
+      name
+      email
+    }
+  }
+}
+```
 
 ## Aturan Bisnis
 
-- Jadwal dokter tidak boleh overlap — sistem menolak jika `startTime` dan `endTime` bertabrakan dengan jadwal yang sudah ada
+- Jadwal dokter tidak boleh duplikat di waktu yang sama — sistem menolak jika `scheduledAt` dokter sudah terpakai
 - Customer dan Doctor harus sudah terdaftar sebelum bisa membuat jadwal
 - Email customer bersifat unik — tidak boleh duplikat
 - Kombinasi nama + spesialisasi dokter tidak boleh duplikat
@@ -352,6 +417,6 @@ healthcare-scheduling-system/
 │   ├── auth-service.Dockerfile
 │   ├── schedule-service.Dockerfile
 │   └── init-db.sql
-├── docker-compose.yml
+├── docker-compose.yaml
 └── docs/                  # Spesifikasi arsitektur & implementation plan
 ```

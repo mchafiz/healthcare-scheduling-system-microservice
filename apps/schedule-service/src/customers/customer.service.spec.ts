@@ -11,6 +11,7 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   },
 };
 
@@ -39,12 +40,24 @@ describe("CustomerService", () => {
   });
 
   describe("findAll", () => {
-    it("should return all customers", async () => {
+    it("should return paginated customers with default skip/take", async () => {
       mockPrisma.customer.findMany.mockResolvedValue([mockCustomer]);
+      mockPrisma.customer.count.mockResolvedValue(1);
 
       const result = await service.findAll();
 
-      expect(result).toEqual([mockCustomer]);
+      expect(result).toEqual({ data: [mockCustomer], total: 1 });
+      expect(mockPrisma.customer.findMany).toHaveBeenCalledWith({ skip: 0, take: 10 });
+    });
+
+    it("should pass custom skip and take", async () => {
+      mockPrisma.customer.findMany.mockResolvedValue([mockCustomer]);
+      mockPrisma.customer.count.mockResolvedValue(5);
+
+      const result = await service.findAll(2, 5);
+
+      expect(result).toEqual({ data: [mockCustomer], total: 5 });
+      expect(mockPrisma.customer.findMany).toHaveBeenCalledWith({ skip: 2, take: 5 });
     });
   });
 

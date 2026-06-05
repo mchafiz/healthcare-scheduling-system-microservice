@@ -20,6 +20,8 @@ const mockCustomer = {
   updatedAt: new Date(),
 };
 
+const paginatedResult = { data: [mockCustomer], total: 1 };
+
 describe("CustomersResolver", () => {
   let resolver: CustomersResolver;
 
@@ -38,12 +40,22 @@ describe("CustomersResolver", () => {
     jest.clearAllMocks();
   });
 
-  it("customers() should return all customers", async () => {
-    mockCustomerService.findAll.mockResolvedValue([mockCustomer]);
+  it("customers() should return paginated customers without pagination arg", async () => {
+    mockCustomerService.findAll.mockResolvedValue(paginatedResult);
 
     const result = await resolver.customers();
 
-    expect(result).toEqual([mockCustomer]);
+    expect(mockCustomerService.findAll).toHaveBeenCalledWith(undefined, undefined);
+    expect(result).toEqual(paginatedResult);
+  });
+
+  it("customers() should pass skip and take from pagination arg", async () => {
+    mockCustomerService.findAll.mockResolvedValue(paginatedResult);
+
+    const result = await resolver.customers({ skip: 0, take: 5 });
+
+    expect(mockCustomerService.findAll).toHaveBeenCalledWith(0, 5);
+    expect(result).toEqual(paginatedResult);
   });
 
   it("customer() should return one customer by id", async () => {

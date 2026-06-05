@@ -11,8 +11,12 @@ import { UpdateCustomerInput } from "./dto/update-customer.input";
 export class CustomerService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.customer.findMany();
+  async findAll(skip = 0, take = 10) {
+    const [data, total] = await Promise.all([
+      this.prisma.customer.findMany({ skip, take }),
+      this.prisma.customer.count(),
+    ]);
+    return { data, total };
   }
 
   async findOne(id: string) {

@@ -16,8 +16,8 @@ input CreateDoctorInput {
 input CreateScheduleInput {
   customerId: ID!
   doctorId: ID!
-  endTime: DateTime!
-  startTime: DateTime!
+  objective: String!
+  scheduledAt: DateTime!
 }
 
 type Customer {
@@ -53,21 +53,49 @@ type Mutation {
   updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
 }
 
+type PaginatedCustomers {
+  data: [Customer!]!
+  total: Int!
+}
+
+type PaginatedDoctors {
+  data: [Doctor!]!
+  total: Int!
+}
+
+type PaginatedSchedules {
+  data: [Schedule!]!
+  total: Int!
+}
+
+input PaginationInput {
+  skip: Int = 0
+  take: Int = 10
+}
+
 type Query {
   customer(id: ID!): Customer!
-  customers: [Customer!]!
-  doctors: [Doctor!]!
+  customers(pagination: PaginationInput): PaginatedCustomers!
+  doctor(id: ID!): Doctor!
+  doctors(pagination: PaginationInput): PaginatedDoctors!
   schedule(id: ID!): Schedule!
-  schedules: [Schedule!]!
+  schedules(filter: ScheduleFilterInput, pagination: PaginationInput): PaginatedSchedules!
 }
 
 type Schedule {
   createdAt: DateTime!
   customer: Customer!
   doctor: Doctor!
-  endTime: DateTime!
   id: ID!
-  startTime: DateTime!
+  objective: String!
+  scheduledAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input ScheduleFilterInput {
+  customerId: ID
+  doctorId: ID
+  scheduledAt: DateTime
 }
 
 input UpdateCustomerInput {

@@ -5,6 +5,7 @@ import { AuthGuard } from "../auth/auth.guard";
 
 const mockDoctorService = {
   findAll: jest.fn(),
+  findOne: jest.fn(),
   create: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
@@ -17,6 +18,8 @@ const mockDoctor = {
   createdAt: new Date(),
   updatedAt: new Date(),
 };
+
+const paginatedResult = { data: [mockDoctor], total: 1 };
 
 describe("DoctorResolver", () => {
   let resolver: DoctorResolver;
@@ -36,12 +39,31 @@ describe("DoctorResolver", () => {
     jest.clearAllMocks();
   });
 
-  it("doctors() should return all doctors", async () => {
-    mockDoctorService.findAll.mockResolvedValue([mockDoctor]);
+  it("doctors() should return paginated doctors without pagination arg", async () => {
+    mockDoctorService.findAll.mockResolvedValue(paginatedResult);
 
     const result = await resolver.doctors();
 
-    expect(result).toEqual([mockDoctor]);
+    expect(mockDoctorService.findAll).toHaveBeenCalledWith(undefined, undefined);
+    expect(result).toEqual(paginatedResult);
+  });
+
+  it("doctors() should pass skip and take from pagination arg", async () => {
+    mockDoctorService.findAll.mockResolvedValue(paginatedResult);
+
+    const result = await resolver.doctors({ skip: 0, take: 5 });
+
+    expect(mockDoctorService.findAll).toHaveBeenCalledWith(0, 5);
+    expect(result).toEqual(paginatedResult);
+  });
+
+  it("doctor() should return one doctor by id", async () => {
+    mockDoctorService.findOne.mockResolvedValue(mockDoctor);
+
+    const result = await resolver.doctor("d1");
+
+    expect(mockDoctorService.findOne).toHaveBeenCalledWith("d1");
+    expect(result).toEqual(mockDoctor);
   });
 
   it("createDoctor() should create and return a doctor", async () => {

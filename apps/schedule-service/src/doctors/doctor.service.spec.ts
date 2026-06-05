@@ -11,6 +11,7 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   },
 };
 
@@ -38,12 +39,24 @@ describe("DoctorService", () => {
   });
 
   describe("findAll", () => {
-    it("should return all doctors", async () => {
+    it("should return paginated doctors with default skip/take", async () => {
       mockPrisma.doctor.findMany.mockResolvedValue([mockDoctor]);
+      mockPrisma.doctor.count.mockResolvedValue(1);
 
       const result = await service.findAll();
 
-      expect(result).toEqual([mockDoctor]);
+      expect(result).toEqual({ data: [mockDoctor], total: 1 });
+      expect(mockPrisma.doctor.findMany).toHaveBeenCalledWith({ skip: 0, take: 10 });
+    });
+
+    it("should pass custom skip and take", async () => {
+      mockPrisma.doctor.findMany.mockResolvedValue([mockDoctor]);
+      mockPrisma.doctor.count.mockResolvedValue(3);
+
+      const result = await service.findAll(1, 5);
+
+      expect(result).toEqual({ data: [mockDoctor], total: 3 });
+      expect(mockPrisma.doctor.findMany).toHaveBeenCalledWith({ skip: 1, take: 5 });
     });
   });
 

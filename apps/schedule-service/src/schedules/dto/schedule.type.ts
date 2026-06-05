@@ -8,10 +8,10 @@ export class Schedule {
   id: string;
 
   @Field()
-  startTime: Date;
+  objective: string;
 
   @Field()
-  endTime: Date;
+  scheduledAt: Date;
 
   @Field(() => Customer)
   customer: Customer;
@@ -21,4 +21,7 @@ export class Schedule {
 
   @Field()
   createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
 }

@@ -5,15 +5,19 @@ import { CreateCustomerInput } from "./dto/create-customer.input";
 import { UpdateCustomerInput } from "./dto/update-customer.input";
 import { CustomerService } from "./customer.service";
 import { AuthGuard } from "apps/schedule-service/src/auth/auth.guard";
+import { PaginationInput } from "../common/dto/pagination.input";
+import { PaginatedCustomers } from "../common/dto/paginated-customers.type";
 
 @Resolver(() => Customer)
 @UseGuards(AuthGuard)
 export class CustomersResolver {
   constructor(private readonly customerService: CustomerService) {}
 
-  @Query(() => [Customer])
-  async customers(): Promise<Customer[]> {
-    return this.customerService.findAll();
+  @Query(() => PaginatedCustomers)
+  async customers(
+    @Args('pagination', { nullable: true }) pagination?: PaginationInput,
+  ): Promise<PaginatedCustomers> {
+    return this.customerService.findAll(pagination?.skip, pagination?.take);
   }
 
   @Query(() => Customer)

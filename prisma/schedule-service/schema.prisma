@@ -33,11 +33,11 @@ model Doctor {
 }
 
 model Schedule {
-    id         String   @id @default(uuid())
-    startTime  DateTime
-    endTime    DateTime
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+    id          String   @id @default(uuid())
+    objective   String
+    scheduledAt DateTime
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 
     customerId String
     customer   Customer @relation(fields: [customerId], references: [id])

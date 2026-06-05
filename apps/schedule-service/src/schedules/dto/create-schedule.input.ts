@@ -2,6 +2,9 @@ import { InputType, Field, ID } from "@nestjs/graphql";
 
 @InputType()
 export class CreateScheduleInput {
+  @Field()
+  objective: string;
+
   @Field(() => ID)
   customerId: string;
 
@@ -9,8 +12,5 @@ export class CreateScheduleInput {
   doctorId: string;
 
   @Field()
-  startTime: Date;
-
-  @Field()
-  endTime: Date;
+  scheduledAt: Date;
 }

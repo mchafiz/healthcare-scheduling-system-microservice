@@ -10,6 +10,7 @@ const mockPrisma = {
     findFirst: jest.fn(),
     create: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   },
   customer: {
     findUnique: jest.fn(),
@@ -19,17 +20,15 @@ const mockPrisma = {
   },
 };
 
-const start = new Date("2026-06-10T08:00:00Z");
-const end = new Date("2026-06-10T09:00:00Z");
-
+const scheduledAt = new Date("2026-06-10T08:00:00Z");
 const mockCustomer = { id: "c1", name: "John", email: "john@test.com", phone: "08123" };
 const mockDoctor = { id: "d1", name: "Dr. Smith", specialization: "Cardiology" };
 const mockSchedule = {
   id: "s1",
+  objective: "Checkup",
   customerId: "c1",
   doctorId: "d1",
-  startTime: start,
-  endTime: end,
+  scheduledAt,
   customer: mockCustomer,
   doctor: mockDoctor,
   createdAt: new Date(),
@@ -52,15 +51,56 @@ describe("ScheduleService", () => {
   });
 
   describe("findAll", () => {
-    it("should return all schedules with relations", async () => {
+    it("should return paginated schedules with default params", async () => {
       mockPrisma.schedule.findMany.mockResolvedValue([mockSchedule]);
+      mockPrisma.schedule.count.mockResolvedValue(1);
 
       const result = await service.findAll();
 
-      expect(result).toEqual([mockSchedule]);
-      expect(mockPrisma.schedule.findMany).toHaveBeenCalledWith({
-        include: { doctor: true, customer: true },
-      });
+      expect(result).toEqual({ data: [mockSchedule], total: 1 });
+    });
+
+    it("should apply filter by doctorId", async () => {
+      mockPrisma.schedule.findMany.mockResolvedValue([mockSchedule]);
+      mockPrisma.schedule.count.mockResolvedValue(1);
+
+      const result = await service.findAll(0, 10, { doctorId: "d1" });
+
+      expect(result).toEqual({ data: [mockSchedule], total: 1 });
+      expect(mockPrisma.schedule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { doctorId: "d1" } }),
+      );
+    });
+
+    it("should apply filter by customerId", async () => {
+      mockPrisma.schedule.findMany.mockResolvedValue([mockSchedule]);
+      mockPrisma.schedule.count.mockResolvedValue(1);
+
+      await service.findAll(0, 10, { customerId: "c1" });
+
+      expect(mockPrisma.schedule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { customerId: "c1" } }),
+      );
+    });
+
+    it("should apply filter by scheduledAt", async () => {
+      mockPrisma.schedule.findMany.mockResolvedValue([mockSchedule]);
+      mockPrisma.schedule.count.mockResolvedValue(1);
+
+      await service.findAll(0, 10, { scheduledAt });
+
+      expect(mockPrisma.schedule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { scheduledAt } }),
+      );
+    });
+
+    it("should return empty result when no schedules", async () => {
+      mockPrisma.schedule.findMany.mockResolvedValue([]);
+      mockPrisma.schedule.count.mockResolvedValue(0);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual({ data: [], total: 0 });
     });
   });
 
@@ -81,7 +121,7 @@ describe("ScheduleService", () => {
   });
 
   describe("create", () => {
-    const input = { customerId: "c1", doctorId: "d1", startTime: start, endTime: end };
+    const input = { objective: "Checkup", customerId: "c1", doctorId: "d1", scheduledAt };
 
     it("should create a schedule successfully", async () => {
       mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
@@ -107,16 +147,7 @@ describe("ScheduleService", () => {
       await expect(service.create(input)).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw BadRequestException if endTime <= startTime", async () => {
-      mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
-      mockPrisma.doctor.findUnique.mockResolvedValue(mockDoctor);
-
-      await expect(
-        service.create({ ...input, endTime: start }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it("should throw BadRequestException if doctor has a conflicting schedule", async () => {
+    it("should throw BadRequestException if doctor has conflicting schedule at same time", async () => {
       mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
       mockPrisma.doctor.findUnique.mockResolvedValue(mockDoctor);
       mockPrisma.schedule.findFirst.mockResolvedValue(mockSchedule);

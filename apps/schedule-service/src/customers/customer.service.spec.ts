@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { CustomerService } from "./customer.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { CacheService } from "../cache/cache.service";
 import { NotFoundException, ConflictException } from "@nestjs/common";
 
 const mockPrisma = {
@@ -13,6 +14,13 @@ const mockPrisma = {
     delete: jest.fn(),
     count: jest.fn(),
   },
+};
+
+const mockCache = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  delByPattern: jest.fn(),
 };
 
 const mockCustomer = {
@@ -32,15 +40,20 @@ describe("CustomerService", () => {
       providers: [
         CustomerService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: CacheService, useValue: mockCache },
       ],
     }).compile();
 
     service = module.get<CustomerService>(CustomerService);
     jest.clearAllMocks();
+    mockCache.get.mockResolvedValue(null);
+    mockCache.set.mockResolvedValue(undefined);
+    mockCache.del.mockResolvedValue(undefined);
+    mockCache.delByPattern.mockResolvedValue(undefined);
   });
 
   describe("findAll", () => {
-    it("should return paginated customers with default skip/take", async () => {
+    it("should return paginated customers from DB on cache miss", async () => {
       mockPrisma.customer.findMany.mockResolvedValue([mockCustomer]);
       mockPrisma.customer.count.mockResolvedValue(1);
 
@@ -48,6 +61,17 @@ describe("CustomerService", () => {
 
       expect(result).toEqual({ data: [mockCustomer], total: 1 });
       expect(mockPrisma.customer.findMany).toHaveBeenCalledWith({ skip: 0, take: 10 });
+      expect(mockCache.set).toHaveBeenCalled();
+    });
+
+    it("should return cached result on cache hit", async () => {
+      const cached = { data: [mockCustomer], total: 1 };
+      mockCache.get.mockResolvedValue(cached);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual(cached);
+      expect(mockPrisma.customer.findMany).not.toHaveBeenCalled();
     });
 
     it("should pass custom skip and take", async () => {
@@ -62,12 +86,22 @@ describe("CustomerService", () => {
   });
 
   describe("findOne", () => {
-    it("should return a customer by id", async () => {
+    it("should return a customer from DB on cache miss", async () => {
       mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
 
       const result = await service.findOne("c1");
 
       expect(result).toEqual(mockCustomer);
+      expect(mockCache.set).toHaveBeenCalled();
+    });
+
+    it("should return cached customer on cache hit", async () => {
+      mockCache.get.mockResolvedValue(mockCustomer);
+
+      const result = await service.findOne("c1");
+
+      expect(result).toEqual(mockCustomer);
+      expect(mockPrisma.customer.findUnique).not.toHaveBeenCalled();
     });
 
     it("should throw NotFoundException if customer not found", async () => {
@@ -78,13 +112,14 @@ describe("CustomerService", () => {
   });
 
   describe("create", () => {
-    it("should create a new customer", async () => {
+    it("should create a new customer and invalidate cache", async () => {
       mockPrisma.customer.findFirst.mockResolvedValue(null);
       mockPrisma.customer.create.mockResolvedValue(mockCustomer);
 
       const result = await service.create({ name: "John", email: "john@test.com", phone: "08123" });
 
       expect(result).toEqual(mockCustomer);
+      expect(mockCache.delByPattern).toHaveBeenCalledWith("customers:*");
     });
 
     it("should throw ConflictException if email already exists", async () => {
@@ -97,7 +132,7 @@ describe("CustomerService", () => {
   });
 
   describe("update", () => {
-    it("should update and return the customer", async () => {
+    it("should update and invalidate cache", async () => {
       const updated = { ...mockCustomer, name: "Jane" };
       mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
       mockPrisma.customer.update.mockResolvedValue(updated);
@@ -105,6 +140,7 @@ describe("CustomerService", () => {
       const result = await service.update("c1", { name: "Jane" });
 
       expect(result.name).toBe("Jane");
+      expect(mockCache.delByPattern).toHaveBeenCalledWith("customers:*");
     });
 
     it("should throw NotFoundException if customer not found", async () => {
@@ -115,13 +151,14 @@ describe("CustomerService", () => {
   });
 
   describe("delete", () => {
-    it("should delete and return true", async () => {
+    it("should delete and invalidate cache", async () => {
       mockPrisma.customer.findUnique.mockResolvedValue(mockCustomer);
       mockPrisma.customer.delete.mockResolvedValue(mockCustomer);
 
       const result = await service.delete("c1");
 
       expect(result).toBe(true);
+      expect(mockCache.delByPattern).toHaveBeenCalledWith("customers:*");
     });
 
     it("should throw NotFoundException if customer not found", async () => {

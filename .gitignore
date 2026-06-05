@@ -5,3 +5,4 @@ dist/
 prisma/auth-service/migrations/
 prisma/schedule-service/migrations/
 docs/
+coverage/

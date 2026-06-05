@@ -1,6 +1,7 @@
-generator client {  
-    provider = "prisma-client-js"
-    output   = "../../node_modules/@prisma/auth-client"
+generator client {
+    provider      = "prisma-client-js"
+    output        = "../../node_modules/@prisma/auth-client"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {

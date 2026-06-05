@@ -7,8 +7,9 @@
   RUN npm run build:auth
 
   FROM node:20-alpine AS production
-  WORKDIR /app 
+  WORKDIR /app
   ENV NODE_ENV=production
+  RUN apk add --no-cache openssl
   COPY package*.json ./
   RUN npm ci --only=production
   COPY --from=builder /app/dist/apps/auth-service ./dist/apps/auth-service

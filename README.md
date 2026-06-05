@@ -2,6 +2,13 @@
 
 Sistem penjadwalan layanan kesehatan berbasis microservice. Proyek ini dibangun untuk membuktikan konsep pemisahan tanggung jawab antar service, keamanan autentikasi berlapis, dan validasi aturan bisnis di level database.
 
+![Tests](https://img.shields.io/badge/tests-59%20passed-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-70.8%25-yellow)
+![Services](https://img.shields.io/badge/services-auth%20%7C%20schedule-blue)
+![NestJS](https://img.shields.io/badge/NestJS-10-red)
+![GraphQL](https://img.shields.io/badge/GraphQL-code--first-e10098)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748)
+
 ---
 
 ## Arsitektur Sistem
@@ -132,6 +139,40 @@ Dengan Code First, tidak ada risiko schema dan implementasi tidak sinkron — ka
 Kalau kedua service berbagi satu database yang sama, Schedule Service secara teknis bisa langsung query tabel `users` milik Auth Service — dan sebaliknya. Ini melanggar prinsip microservice paling fundamental: setiap service harus punya data domain-nya sendiri.
 
 Dengan memisahkan `auth_db` dan `schedule_db`, coupling di level database hilang. Auth Service tidak tahu tabel apa yang ada di schedule_db, dan sebaliknya. Komunikasi antar service hanya boleh lewat API yang terdefinisi — dalam kasus ini, lewat TCP.
+
+---
+
+## Test Coverage
+
+Unit test mencakup seluruh layer business logic (service, resolver, controller, guard) dengan total **59 test** di **11 test suite**.
+
+```
+Test Suites : 11 passed
+Tests       : 59 passed
+Coverage    : 70.8% statements
+```
+
+| Layer | File | Statements | Branches | Functions | Lines |
+|---|---|---|---|---|---|
+| **Auth Service** | `auth.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `auth.resolver.ts` | ![83%](https://img.shields.io/badge/83%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![57%](https://img.shields.io/badge/57%25-yellow) | ![81%](https://img.shields.io/badge/81%25-green) |
+| | `auth.controller.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `users.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| **Schedule Service** | `customer.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `doctor.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `schedule.service.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| | `auth.guard.ts` | ![95%](https://img.shields.io/badge/95%25-brightgreen) | ![67%](https://img.shields.io/badge/67%25-yellow) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![95%](https://img.shields.io/badge/95%25-brightgreen) |
+| | `customer.resolver.ts` | ![73%](https://img.shields.io/badge/73%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![47%](https://img.shields.io/badge/47%25-yellow) | ![71%](https://img.shields.io/badge/71%25-green) |
+| | `doctor.resolver.ts` | ![76%](https://img.shields.io/badge/76%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![45%](https://img.shields.io/badge/45%25-yellow) | ![74%](https://img.shields.io/badge/74%25-green) |
+| | `schedule.resolver.ts` | ![76%](https://img.shields.io/badge/76%25-green) | ![100%](https://img.shields.io/badge/100%25-brightgreen) | ![50%](https://img.shields.io/badge/50%25-yellow) | ![74%](https://img.shields.io/badge/74%25-green) |
+
+> Coverage resolver tidak 100% karena decorator GraphQL (`@Query`, `@Mutation`, `@Field`) tidak dieksekusi saat unit test — ini normal dan expected. Semua business logic di service layer mencapai **100%**.
+
+Untuk menjalankan test:
+```bash
+npm test
+npm test -- --coverage
+```
 
 ---
 

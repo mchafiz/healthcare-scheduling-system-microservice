@@ -498,5 +498,4 @@ healthcare-scheduling-system/
 │   └── init-db.sql
 ├── docker-compose.yaml
 ├── .env.example
-└── docs/                  # Spesifikasi arsitektur & implementation plan
 ```
